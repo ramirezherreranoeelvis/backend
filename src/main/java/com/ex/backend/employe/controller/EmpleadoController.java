@@ -6,6 +6,7 @@ import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -16,7 +17,6 @@ import com.ex.backend.employe.dao.IEmployeeDAO;
 import com.ex.backend.employe.dto.EmployeCreate;
 import com.ex.backend.employe.dto.EmployeMostrar;
 import com.ex.backend.employe.dto.EmployeUpdate;
-import com.ex.backend.model.Employe;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -69,13 +69,15 @@ public class EmpleadoController {
                 return ResponseEntity.ok(EmployeMostrar
                                 .builder()
                                 .correo(result.get().getCorreo())
-                                .dominio(result.get().getDominio())
+                                .dominio(result.get().getDominio().getDisplayName())
                                 .identificacion(result.get().getIdentificacion())
                                 .nombres(result.get().getNombres())
                                 .primerApellido(result.get().getPrimerApellido())
                                 .segundoApellido(result.get().getSegundoApellido())
                                 .numeroIdentificacion(result.get().getNumeroIdentificacion())
                                 .pais(result.get().getPais())
+                                .area(result.get().getArea().getDisplayName())
+                                .estado(result.get().getEstado())
                                 .build());
         }
 
@@ -120,4 +122,8 @@ public class EmpleadoController {
                 return value;
         }
 
+        @DeleteMapping("/delete")
+        public ResponseEntity<?> eliminarEmpleado(@RequestParam String numeroIdentificacion) {
+                return this.employeeDAO.delete(numeroIdentificacion);
+        }
 }

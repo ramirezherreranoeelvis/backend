@@ -23,4 +23,6 @@ public interface IEmployeeDAO {
         ResponseEntity<?> entrada(String numeroIdentificacion);
 
         Optional<Employe> findByIdentification(String numeroIdentificacion);
+
+        ResponseEntity<?> delete(String numeroIdentificacion);
 }

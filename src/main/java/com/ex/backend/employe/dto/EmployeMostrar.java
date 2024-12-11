@@ -6,7 +6,6 @@ import lombok.Setter;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 
-import com.ex.backend.model.Dominio;
 import com.ex.backend.model.Identificacion;
 import com.ex.backend.model.Pais;
 
@@ -34,6 +33,8 @@ public class EmployeMostrar {
 
         private Identificacion identificacion;
 
-        private Dominio dominio;
+        private String dominio;
 
+        private String area;
+        private String estado;
 }

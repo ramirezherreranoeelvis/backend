@@ -20,10 +20,18 @@ public class EmployeUpdate implements Serializable {
 
         private String numeroIdentificacion;
 
+        private String nombres;
+
+        private String primerApellido;
+
+        private String segundoApellido;
+
         private String pais;
 
         private String identificacion;
 
         private String dominio;
+
+        private String area;
 
 }

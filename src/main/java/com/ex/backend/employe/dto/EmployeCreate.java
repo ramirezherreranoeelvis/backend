@@ -28,4 +28,8 @@ public class EmployeCreate {
 
         private String identificacion;
 
+        private String dominio;
+
+        private String area;
+
 }

@@ -15,6 +15,7 @@ import com.ex.backend.employe.dto.EmployeUpdate;
 import com.ex.backend.employe.repository.IEmployeRepository;
 import com.ex.backend.employe.repository.IEntryRepository;
 import com.ex.backend.message.Message;
+import com.ex.backend.model.Areas;
 import com.ex.backend.model.Dominio;
 import com.ex.backend.model.Employe;
 import com.ex.backend.model.Identificacion;
@@ -38,20 +39,17 @@ public class EmployeService implements IEmployeeDAO {
                 if (pais == null) {
                         return null;
                 }
-                Dominio dominio = Dominio.valueOf(pais.getDisplayName());
-
-                var primerNombre = employeCreate.getNombres().split(" ")[0];
-
-                var empleados = this.employeRepository.findAll().stream()
-                                .filter(empleado -> empleado.getPrimerApellido()
-                                                .equals(employeCreate.getPrimerApellido())
-                                                && empleado.getNombres().split(" ")[0].equals(primerNombre))
-                                .toList();
-
-                var identifier = empleados;
-                var correo = primerNombre + "." + employeCreate.getPrimerApellido() + "."
-                                + (identifier.size() == 0 ? "" : identifier.get(identifier.size() - 1).getIdEmploye())
-                                + "@" + dominio;
+                logger.info(employeCreate.getDominio().toUpperCase());
+                Dominio dominio = Dominio.valueOf(employeCreate.getDominio().toUpperCase());
+                if (dominio == null) {
+                        return null;
+                }
+                Areas area = Areas.valueOf(employeCreate.getArea().toUpperCase());
+                if (area == null) {
+                        return null;
+                }
+                var correo = this.generacionCorreo(employeCreate.getNombres(), employeCreate.getPrimerApellido(),
+                                dominio.getDisplayName());
 
                 var identificacion = Identificacion.valueOf(employeCreate.getIdentificacion().toUpperCase());
                 if (identificacion == null) {
@@ -66,6 +64,7 @@ public class EmployeService implements IEmployeeDAO {
                                 .pais(pais)
                                 .identificacion(identificacion)
                                 .dominio(dominio)
+                                .area(area)
                                 .build()));
         }
 
@@ -79,11 +78,34 @@ public class EmployeService implements IEmployeeDAO {
                 }
                 var employe = employeOptional.get();
                 var pais = Pais.valueOf(employeUpdate.getPais().toUpperCase());
+
                 var identificacion = Identificacion.valueOf(employeUpdate.getIdentificacion().toUpperCase());
-                Dominio dominio = Dominio.valueOf(pais.getDisplayName());
+
+                Dominio dominio = Dominio.valueOf(employeUpdate.getDominio());
+
+                Areas area = Areas.valueOf(employeUpdate.getArea().toUpperCase());
+                if (area == null) {
+                        return null;
+                }
+
+                if (!employeOptional.get().getNombres().equals(employeUpdate.getNombres()) || !employeOptional.get()
+                                .getPrimerApellido().equals(employeUpdate.getPrimerApellido())) {
+                        var correo = this.generacionCorreo(employeUpdate.getNombres(),
+                                        employeUpdate.getPrimerApellido(),
+                                        dominio.getDisplayName());
+                        employe.setCorreo(correo);
+                }
+
+                employe.setNumeroIdentificacion(employeUpdate.getNumeroIdentificacion());
+                employe.setFechaEdicion(new Date());
+                employe.setNombres(employeUpdate.getNombres());
+                employe.setPrimerApellido(employeUpdate.getPrimerApellido());
+                employe.setSegundoApellido(employeUpdate.getSegundoApellido());
                 employe.setPais(pais);
                 employe.setIdentificacion(identificacion);
                 employe.setDominio(dominio);
+                employe.setArea(area);
+                this.employeRepository.save(employe);
                 return ResponseEntity.ok(Message.Message("Se actualizo Exitosamente"));
         }
 
@@ -121,13 +143,15 @@ public class EmployeService implements IEmployeeDAO {
                 return this.employeRepository.findAll().stream().map(employee -> EmployeMostrar
                                 .builder()
                                 .correo(employee.getCorreo())
-                                .dominio(employee.getDominio())
+                                .dominio(employee.getDominio().getDisplayName())
                                 .identificacion(employee.getIdentificacion())
                                 .nombres(employee.getNombres())
                                 .primerApellido(employee.getPrimerApellido())
                                 .segundoApellido(employee.getSegundoApellido())
                                 .numeroIdentificacion(employee.getNumeroIdentificacion())
                                 .pais(employee.getPais())
+                                .estado(employee.getEstado())
+                                .area(employee.getArea().getDisplayName())
                                 .build()).toList();
         }
 
@@ -137,5 +161,34 @@ public class EmployeService implements IEmployeeDAO {
                                 .filter(employe -> employe.getNumeroIdentificacion().equals(numeroIdentificacion))
                                 .findFirst();
         }
+
+        @Override
+        public ResponseEntity<?> delete(String numeroIdentificacion) {
+                var employeOptional = findByIdentification(numeroIdentificacion);
+                logger.info("entro el coso este");
+                if (employeOptional.isEmpty()) {
+                        return ResponseEntity.badRequest().body("No existe empleado para eliminar");
+                }
+                this.employeRepository.delete(employeOptional.get());
+                logger.info("elimino");
+                return ResponseEntity.ok(Message.Message("El Empleado a sido eliminado exitosamente"));
+        }
+
+        public String generacionCorreo(String nombres, String primerApellido, String dominio) {
+                var primerNombre = nombres.split(" ")[0];
+                var empleados = this.employeRepository.findAll().stream()
+                                .filter(empleado -> empleado.getPrimerApellido()
+                                                .equals(primerApellido)
+                                                && empleado.getNombres().split(" ")[0].equals(primerNombre))
+                                .toList();
+
+                var identifier = empleados;
+                var correo = primerNombre + "." + primerApellido + "."
+                                + (identifier.size() == 0 ? "" : identifier.get(identifier.size() - 1).getIdEmploye())
+                                + "@" + dominio;
+                return correo;
+        }
+
+        private java.util.logging.Logger logger = java.util.logging.Logger.getLogger(getClass().getName());
 
 }
