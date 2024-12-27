@@ -6,6 +6,8 @@ import lombok.Setter;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 import lombok.AllArgsConstructor;
 
 @Setter
@@ -14,22 +16,22 @@ import lombok.AllArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EmployeCreate {
+public class EmployeCreate implements Serializable{
 
-        private String numeroIdentificacion;
+        private String identificationNumber;
 
-        private String nombres;
+        private String names;
 
-        private String primerApellido;
+        private String firstSurname;
 
-        private String segundoApellido;
+        private String secondSurname;
 
-        private String pais;
+        private String country;
 
-        private String identificacion;
+        private String identification;
 
-        private String dominio;
+        private String domain;
 
-        private String area;
+        private String department;
 
 }

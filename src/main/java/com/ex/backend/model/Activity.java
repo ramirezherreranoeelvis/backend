@@ -27,27 +27,27 @@ import lombok.AllArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "ingreso")
-public class Ingreso {
+@Table(name = "activity")
+public class Activity {
 
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         private int idIngreso;
 
         @ManyToOne
-        @JoinColumn(name = "idEmploye", nullable = false)
-        private Employe employe;
+        @JoinColumn(name = "idEmployee", nullable = false)
+        private Employee employee;
 
-        @Column(name = "ingreso")
+        @Column(name = "entryTime")
         @Temporal(TemporalType.TIMESTAMP)
-        private Date timeEntry;
+        private Date entryTime;
 
-        @Column(name = "salida")
+        @Column(name = "exitTime")
         @Temporal(TemporalType.TIMESTAMP)
-        private Date timeExit;
+        private Date exitTime;
 
         @PrePersist
         protected void onCreate() {
-                timeEntry = new Date();
+                entryTime = new Date();
         }
 }

@@ -3,14 +3,24 @@ package com.ex.backend.message;
 import lombok.Getter;
 import lombok.Setter;
 
-public class Message {
-        @Getter
-        @Setter
+@Getter
+@Setter
+public class Message<T> {
+
         private String message;
 
-        public static Message Message(String message) {
-                var x = new Message();
-                x.message = message;
-                return x;
+        private T result;
+
+        public static <T> Message<T> message(String message) {
+                var msg = new Message<T>();
+                msg.setMessage(message);
+                return msg;
+        }
+
+        public static <T> Message<T> message(String message, T result) {
+                var msg = new Message<T>();
+                msg.setMessage(message);
+                msg.setResult(result);
+                return msg;
         }
 }

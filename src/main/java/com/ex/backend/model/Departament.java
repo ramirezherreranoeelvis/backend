@@ -4,7 +4,7 @@ package com.ex.backend.model;
  *
  * @author Gatomontes
  */
-public enum Areas {
+public enum Departament {
 
         ADMINISTRACION("Administración"),
         FINANCIERA("Financiera"),
@@ -16,7 +16,7 @@ public enum Areas {
 
         private final String displayName;
 
-        Areas(String displayName) {
+        Departament(String displayName) {
                 this.displayName = displayName;
         }
 

@@ -1,5 +1,6 @@
 package com.ex.backend.employe.controller;
 
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -15,8 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ex.backend.employe.dao.IEmployeeDAO;
 import com.ex.backend.employe.dto.EmployeCreate;
-import com.ex.backend.employe.dto.EmployeMostrar;
-import com.ex.backend.employe.dto.EmployeUpdate;
+import com.ex.backend.util.ValidDataUtil;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -25,9 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RequestMapping("/employees")
 @CrossOrigin(origins = "http://localhost:4200", allowedHeaders = "*")
 public class EmpleadoController {
-        Predicate<String> nombresValid = t -> t == null || !t.matches("[a-zA-Z]+") || t.isEmpty();
-        Predicate<String> numeroIdentificacion = t -> t == null || !t.matches("[a-zA-Z0-9]+") || t.isEmpty()
-                        || t.length() >= 20;
+
         @Autowired
         private IEmployeeDAO employeeDAO;
 
@@ -38,92 +36,95 @@ public class EmpleadoController {
 
         @PostMapping("/create")
         public ResponseEntity<?> createEmployee(@RequestBody EmployeCreate employeCreate) {
-                var existen = Stream.of(
-                                employeCreate.getIdentificacion(),
-                                employeCreate.getNombres(),
-                                employeCreate.getNumeroIdentificacion(),
-                                employeCreate.getPais(),
-                                employeCreate.getPrimerApellido(),
-                                employeCreate.getSegundoApellido()).anyMatch(x -> x == null);
-                if (existen) {
+                if (isMissingData.test(employeCreate)) {
                         return ResponseEntity.badRequest().body("Faltan datos");
                 }
-
-                if (this.employeeDAO.findByIdentification(employeCreate.getNumeroIdentificacion()).isPresent()) {
-                        return ResponseEntity.badRequest().body("Ya existe un empleado con esa identificación");
-                }
-
-                if (nombresValid.test(employeCreate.getNombres())) {
-                        return ResponseEntity.badRequest().body("No se permite caracteres especiales como ñ o tildes");
-                }
-                if (nombresValid.test(employeCreate.getPrimerApellido())) {
-                        return ResponseEntity.badRequest().body("No se permite caracteres especiales como ñ o tildes");
-                }
-                if (nombresValid.test(employeCreate.getSegundoApellido())) {
-                        return ResponseEntity.badRequest().body("No se permite caracteres especiales como ñ o tildes");
-                }
-                if (numeroIdentificacion.test(employeCreate.getNumeroIdentificacion())) {
+                if (!ValidDataUtil.identificationNumberValid(employeCreate.getIdentificationNumber())) {
                         return ResponseEntity.badRequest().body("Número de Identificación No Valido");
                 }
-                var result = this.employeeDAO.create(employeCreate);
-                return ResponseEntity.ok(EmployeMostrar
-                                .builder()
-                                .correo(result.get().getCorreo())
-                                .dominio(result.get().getDominio().getDisplayName())
-                                .identificacion(result.get().getIdentificacion())
-                                .nombres(result.get().getNombres())
-                                .primerApellido(result.get().getPrimerApellido())
-                                .segundoApellido(result.get().getSegundoApellido())
-                                .numeroIdentificacion(result.get().getNumeroIdentificacion())
-                                .pais(result.get().getPais())
-                                .area(result.get().getArea().getDisplayName())
-                                .estado(result.get().getEstado())
-                                .build());
+                if (this.employeeDAO.verifyEmployeeExistence(employeCreate.getIdentificationNumber())) {
+                        return ResponseEntity.badRequest().body("El número de identificación ya está en uso");
+                }
+
+                if (!isNamesValid.test(employeCreate)) {
+                        return ResponseEntity.badRequest().body("No se permite caracteres especiales como ñ o tildes");
+                }
+
+                return this.employeeDAO.create(employeCreate);
         }
 
         @PutMapping("/update")
-        public ResponseEntity<?> updateDataEmployed(@RequestBody EmployeUpdate employeUpdate) {
-                var existen = Stream.of(
-                                employeUpdate.getIdentificacion(),
-                                employeUpdate.getDominio(),
-                                employeUpdate.getPais(),
-                                employeUpdate.getNumeroIdentificacion()).anyMatch(x -> x == null);
-                if (existen) {
+        public ResponseEntity<?> updateDataEmployed(@RequestBody EmployeCreate employeUpdate,
+                        @RequestParam String identificationNumber) {
+                // Validar si faltan datos
+                if (isMissingData.test(employeUpdate)) {
                         return ResponseEntity.badRequest().body("Faltan datos");
                 }
+                if (!ValidDataUtil.identificationNumberValid(employeUpdate.getIdentificationNumber())) {
+                        return ResponseEntity.badRequest().body("Número de Identificación No Valido");
+                }
+                // Validar caracteres inválidos en nombres
+                if (!isNamesValid.test(employeUpdate)) {
+                        return ResponseEntity.badRequest().body("No se permiten caracteres especiales como ñ o tildes");
+                }
 
-                var reesult = this.employeeDAO.update(employeUpdate);
-                return reesult;
+                // Verificar si el empleado a actualizar existe
+                if (!employeeDAO.verifyEmployeeExistence(identificationNumber)) {
+                        return ResponseEntity.badRequest().body("El empleado a actualizar no existe");
+                }
+
+                // Verificar si el número de identificación ya está en uso
+                if (employeeDAO.verifyEmployeeExistence(employeUpdate.getIdentificationNumber(), identificationNumber)) {
+                        return ResponseEntity.badRequest().body("El número de identificación ya está en uso");
+                }
+
+                var result = this.employeeDAO.update(employeUpdate, identificationNumber);
+                return result;
         }
 
-        @PostMapping("/ingreso")
-        public ResponseEntity<?> ingreso(@RequestParam String numeroIdentificacion) {
-                if (numeroIdentificacion.equals(null)) {
+        @PostMapping("/entry")
+        public ResponseEntity<?> registerEntry(@RequestParam String identificationNumber) {
+                if (identificationNumber.equals(null)) {
                         return ResponseEntity.badRequest().body("Ingrese un id Valido");
                 }
-                if (this.employeeDAO.findByIdentification(numeroIdentificacion).isEmpty()) {
+                if (this.employeeDAO.findByIdentification(identificationNumber).isEmpty()) {
                         return ResponseEntity.badRequest().body("El empleado a registrar ingreso no existe");
                 }
-                var value = employeeDAO.entrada(numeroIdentificacion);
+                var value = employeeDAO.entrada(identificationNumber);
 
                 return value;
         }
 
-        @PostMapping("/salida")
-        public ResponseEntity<?> salida(@RequestParam String numeroIdentificacion) {
-                if (numeroIdentificacion.equals(null)) {
+        @PostMapping("/exit")
+        public ResponseEntity<?> registerExit(@RequestParam String identificationNumber) {
+                if (identificationNumber.equals(null)) {
                         return ResponseEntity.badRequest().body("Ingrese un id Valido");
                 }
-                if (this.employeeDAO.findByIdentification(numeroIdentificacion).isEmpty()) {
+                if (this.employeeDAO.findByIdentification(identificationNumber).isEmpty()) {
                         return ResponseEntity.badRequest().body("El empleado a registrar ingreso no existe");
                 }
-                var value = employeeDAO.salida(numeroIdentificacion);
+                var value = employeeDAO.salida(identificationNumber);
 
                 return value;
         }
 
         @DeleteMapping("/delete")
-        public ResponseEntity<?> eliminarEmpleado(@RequestParam String numeroIdentificacion) {
-                return this.employeeDAO.delete(numeroIdentificacion);
+        public ResponseEntity<?> deleteEmployee(@RequestParam String identificationNumber) {
+                return this.employeeDAO.delete(identificationNumber);
         }
+
+        Predicate<EmployeCreate> isMissingData = employeCreate -> Stream.of(
+                        employeCreate.getIdentification(),
+                        employeCreate.getNames(),
+                        employeCreate.getIdentificationNumber(),
+                        employeCreate.getCountry(),
+                        employeCreate.getFirstSurname(),
+                        employeCreate.getSecondSurname())
+                        .anyMatch(Objects::isNull);
+
+        Predicate<EmployeCreate> isNamesValid = employeCreate -> Stream.of(
+                        employeCreate.getNames(),
+                        employeCreate.getFirstSurname(),
+                        employeCreate.getSecondSurname())
+                        .allMatch(ValidDataUtil::namesValid);
 }

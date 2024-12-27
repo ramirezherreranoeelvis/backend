@@ -10,17 +10,16 @@ import org.springframework.stereotype.Service;
 
 import com.ex.backend.employe.dao.IEmployeeDAO;
 import com.ex.backend.employe.dto.EmployeCreate;
-import com.ex.backend.employe.dto.EmployeMostrar;
-import com.ex.backend.employe.dto.EmployeUpdate;
+import com.ex.backend.employe.dto.EmployeDisplay;
 import com.ex.backend.employe.repository.IEmployeRepository;
 import com.ex.backend.employe.repository.IEntryRepository;
 import com.ex.backend.message.Message;
-import com.ex.backend.model.Areas;
-import com.ex.backend.model.Dominio;
-import com.ex.backend.model.Employe;
-import com.ex.backend.model.Identificacion;
-import com.ex.backend.model.Ingreso;
-import com.ex.backend.model.Pais;
+import com.ex.backend.model.Departament;
+import com.ex.backend.model.Domain;
+import com.ex.backend.model.Employee;
+import com.ex.backend.model.Identification;
+import com.ex.backend.model.Activity;
+import com.ex.backend.model.Country;
 
 import jakarta.transaction.Transactional;
 
@@ -34,131 +33,127 @@ public class EmployeService implements IEmployeeDAO {
         private IEntryRepository entryRepository;
 
         @Override
-        public Optional<Employe> create(EmployeCreate employeCreate) {
-                Pais pais = Pais.valueOf(employeCreate.getPais().toUpperCase());
-                if (pais == null) {
-                        return null;
-                }
-                logger.info(employeCreate.getDominio().toUpperCase());
-                Dominio dominio = Dominio.valueOf(employeCreate.getDominio().toUpperCase());
-                if (dominio == null) {
-                        return null;
-                }
-                Areas area = Areas.valueOf(employeCreate.getArea().toUpperCase());
-                if (area == null) {
-                        return null;
-                }
-                var correo = this.generacionCorreo(employeCreate.getNombres(), employeCreate.getPrimerApellido(),
-                                dominio.getDisplayName());
+        public ResponseEntity<?> create(EmployeCreate employeCreate) {
+                try {
+                        var country = parseEnum(Country.class, employeCreate.getCountry(), "País no válido");
+                        var domain = parseEnum(Domain.class, employeCreate.getDomain(), "Dominio no válido");
+                        var department = parseEnum(Departament.class, employeCreate.getDepartment(), "Área no válida");
+                        var identification = parseEnum(Identification.class,
+                                        employeCreate.getIdentification(), "Identificación no válida");
+                        logger.info(identification.toString());
+                        String correo = this.generacionCorreo(
+                                        employeCreate.getNames(),
+                                        employeCreate.getFirstSurname(),
+                                        domain.getDisplayName());
 
-                var identificacion = Identificacion.valueOf(employeCreate.getIdentificacion().toUpperCase());
-                if (identificacion == null) {
-                        return null;
+                        this.employeRepository.save(Employee.builder()
+                                        .identificationNumber(employeCreate.getIdentificationNumber())
+                                        .email(correo)
+                                        .names(employeCreate.getNames())
+                                        .firstSurname(employeCreate.getFirstSurname())
+                                        .secondSurname(employeCreate.getSecondSurname())
+                                        .country(country)
+                                        .identification(identification)
+                                        .domain(domain)
+                                        .department(department)
+                                        .build());
+                        return ResponseEntity.ok(Message.message("Empleado creado con exito"));
+                } catch (IllegalArgumentException e) {
+                        return ResponseEntity.badRequest().body(e.getMessage());
+                } catch (Exception e) {
+                        return ResponseEntity.internalServerError().body("Error al crear empleado");
                 }
-                return Optional.of(this.employeRepository.save(Employe.builder()
-                                .numeroIdentificacion(employeCreate.getNumeroIdentificacion())
-                                .correo(correo)
-                                .nombres(employeCreate.getNombres())
-                                .primerApellido(employeCreate.getPrimerApellido())
-                                .segundoApellido(employeCreate.getSegundoApellido())
-                                .pais(pais)
-                                .identificacion(identificacion)
-                                .dominio(dominio)
-                                .area(area)
-                                .build()));
+
         }
 
         @Override
-        public ResponseEntity<?> update(EmployeUpdate employeUpdate) {
-                var employeOptional = this.employeRepository.findAll().stream().filter(
-                                e -> e.getNumeroIdentificacion().equals(employeUpdate.getNumeroIdentificacion()))
-                                .findFirst();
-                if (employeOptional.isEmpty()) {
-                        return ResponseEntity.badRequest().body("Al parecer no existe el empleado");
+        public ResponseEntity<?> update(EmployeCreate employeUpdate, String numeroIdentificacion) {
+                try {
+                        var employe = this.findByIdentification(numeroIdentificacion).get();
+                        // valid Enums
+                        var country = parseEnum(Country.class, employeUpdate.getCountry(), "País no válido");
+                        var domain = parseEnum(Domain.class, employeUpdate.getDomain(), "Dominio no válido");
+                        var department = parseEnum(Departament.class, employeUpdate.getDepartment(), "Área no válida");
+                        var identification = parseEnum(Identification.class, employeUpdate.getIdentification(),
+                                        "Identificación no válida");
+                        //
+                        if (!employe.getNames().equals(employeUpdate.getNames()) || !employe
+                                        .getFirstSurname().equals(employeUpdate.getFirstSurname())) {
+                                var correo = this.generacionCorreo(employeUpdate.getNames(),
+                                                employeUpdate.getFirstSurname(),
+                                                domain.getDisplayName());
+                                employe.setEmail(correo);
+                        }
+                        employe.setIdentificationNumber(employeUpdate.getIdentificationNumber());
+                        employe.setEditDate(new Date());
+                        employe.setNames(employeUpdate.getNames());
+                        employe.setFirstSurname(employeUpdate.getFirstSurname());
+                        employe.setSecondSurname(employeUpdate.getSecondSurname());
+                        employe.setCountry(country);
+                        employe.setIdentification(identification);
+                        employe.setDomain(domain);
+                        employe.setDepartment(department);
+                        this.employeRepository.save(employe);
+                        return ResponseEntity.ok(Message.message("Se actualizo Exitosamente"));
+
+                } catch (IllegalArgumentException e) {
+                        return ResponseEntity.badRequest().body(e.getMessage());
+                } catch (Exception e) {
+                        return ResponseEntity.internalServerError().body("Error al actualizar empleado");
                 }
-                var employe = employeOptional.get();
-                var pais = Pais.valueOf(employeUpdate.getPais().toUpperCase());
 
-                var identificacion = Identificacion.valueOf(employeUpdate.getIdentificacion().toUpperCase());
-
-                Dominio dominio = Dominio.valueOf(employeUpdate.getDominio());
-
-                Areas area = Areas.valueOf(employeUpdate.getArea().toUpperCase());
-                if (area == null) {
-                        return null;
-                }
-
-                if (!employeOptional.get().getNombres().equals(employeUpdate.getNombres()) || !employeOptional.get()
-                                .getPrimerApellido().equals(employeUpdate.getPrimerApellido())) {
-                        var correo = this.generacionCorreo(employeUpdate.getNombres(),
-                                        employeUpdate.getPrimerApellido(),
-                                        dominio.getDisplayName());
-                        employe.setCorreo(correo);
-                }
-
-                employe.setNumeroIdentificacion(employeUpdate.getNumeroIdentificacion());
-                employe.setFechaEdicion(new Date());
-                employe.setNombres(employeUpdate.getNombres());
-                employe.setPrimerApellido(employeUpdate.getPrimerApellido());
-                employe.setSegundoApellido(employeUpdate.getSegundoApellido());
-                employe.setPais(pais);
-                employe.setIdentificacion(identificacion);
-                employe.setDominio(dominio);
-                employe.setArea(area);
-                this.employeRepository.save(employe);
-                return ResponseEntity.ok(Message.Message("Se actualizo Exitosamente"));
         }
 
         @Override
         public ResponseEntity<?> salida(String numeroIdentificacion) {
                 var salidaFaltante = this.entryRepository.findAll().stream()
-                                .filter(e -> e.getEmploye().getNumeroIdentificacion().equals(numeroIdentificacion))
-                                .filter(e -> e.getTimeExit() == null).findFirst();
+                                .filter(e -> e.getEmployee().getIdentificationNumber().equals(numeroIdentificacion))
+                                .filter(e -> e.getExitTime() == null).findFirst();
                 if (salidaFaltante.isEmpty()) {
                         return ResponseEntity.badRequest().body("No hay un ingreso para registrar su salida");
                 }
-                salidaFaltante.get().setTimeExit(new Date());
+                salidaFaltante.get().setExitTime(new Date());
 
                 return this.entryRepository.save(salidaFaltante.get()) == null
                                 ? ResponseEntity.badRequest().body("No se pudo registrar salida")
-                                : ResponseEntity.ok().body(Message.Message("Se regisgro la salida correctamente "));
+                                : ResponseEntity.ok(Message.message("Se regisgro la salida correctamente "));
         }
 
         @Override
         public ResponseEntity<?> entrada(String numeroIdentificacion) {
 
                 var salidaFaltante = this.entryRepository.findAll().stream()
-                                .filter(e -> e.getEmploye().getNumeroIdentificacion().equals(numeroIdentificacion))
-                                .filter(e -> e.getTimeExit() == null).findFirst();
+                                .filter(e -> e.getEmployee().getIdentificationNumber().equals(numeroIdentificacion))
+                                .filter(e -> e.getExitTime() == null).findFirst();
                 if (salidaFaltante.isPresent()) {
                         return ResponseEntity.badRequest().body("Este usuario aun tiene una salida faltante");
                 }
                 this.entryRepository.save(
-                                Ingreso.builder().employe(findByIdentification(numeroIdentificacion).get()).build());
-                return ResponseEntity.ok().body(Message.Message("Se registro el ingreso correctamente"));
+                                Activity.builder().employee(findByIdentification(numeroIdentificacion).get()).build());
+                return ResponseEntity.ok().body(Message.message("Se registro el ingreso correctamente"));
         }
 
         @Override
-        public List<EmployeMostrar> findEmployess() {
-                return this.employeRepository.findAll().stream().map(employee -> EmployeMostrar
+        public List<EmployeDisplay> findEmployess() {
+                return this.employeRepository.findAll().stream().map(employee -> EmployeDisplay
                                 .builder()
-                                .correo(employee.getCorreo())
-                                .dominio(employee.getDominio().getDisplayName())
-                                .identificacion(employee.getIdentificacion())
-                                .nombres(employee.getNombres())
-                                .primerApellido(employee.getPrimerApellido())
-                                .segundoApellido(employee.getSegundoApellido())
-                                .numeroIdentificacion(employee.getNumeroIdentificacion())
-                                .pais(employee.getPais())
-                                .estado(employee.getEstado())
-                                .area(employee.getArea().getDisplayName())
+                                .email(employee.getEmail())
+                                .domain(employee.getDomain().getDisplayName())
+                                .identification(employee.getIdentification())
+                                .names(employee.getNames())
+                                .firstSurname(employee.getFirstSurname())
+                                .secondSurname(employee.getSecondSurname())
+                                .identificationNumber(employee.getIdentificationNumber())
+                                .country(employee.getCountry())
+                                .status(employee.getStatus())
+                                .department(employee.getDepartment().getDisplayName())
                                 .build()).toList();
         }
 
         @Override
-        public Optional<Employe> findByIdentification(String numeroIdentificacion) {
+        public Optional<Employee> findByIdentification(String numeroIdentificacion) {
                 return this.employeRepository.findAll().stream()
-                                .filter(employe -> employe.getNumeroIdentificacion().equals(numeroIdentificacion))
+                                .filter(employe -> employe.getIdentificationNumber().equals(numeroIdentificacion))
                                 .findFirst();
         }
 
@@ -169,24 +164,58 @@ public class EmployeService implements IEmployeeDAO {
                 if (employeOptional.isEmpty()) {
                         return ResponseEntity.badRequest().body("No existe empleado para eliminar");
                 }
+                // ELiminar ingresos y salidas
+                var ingresos = this.entryRepository.findAll().stream()
+                                .filter(e -> e.getEmployee().getIdentificationNumber().equals(numeroIdentificacion))
+                                .toList();
+                ingresos.forEach(ingreso -> this.entryRepository.delete(ingreso));
                 this.employeRepository.delete(employeOptional.get());
                 logger.info("elimino");
-                return ResponseEntity.ok(Message.Message("El Empleado a sido eliminado exitosamente"));
+                return ResponseEntity.ok(Message.message("El Empleado a sido eliminado exitosamente"));
         }
 
-        public String generacionCorreo(String nombres, String primerApellido, String dominio) {
+        @Override
+        public boolean verifyEmployeeExistence(String identificationNumber) {
+                return this.findByIdentification(identificationNumber).isPresent();
+        }
+
+        /*
+         * @param identificationNumber: numero de identificacion del empleado que vamos
+         * a cambiar
+         * 
+         * @param numeroIdentificactionExcept: numero de identificacion del empleado que
+         * vamos a excluir
+         */
+        @Override
+        public boolean verifyEmployeeExistence(String identificationNumber, String identificationNumberExcept) {
+                return this.employeRepository.findAll().stream()
+                                .filter(employee -> !employee.getIdentificationNumber()
+                                                .equals(identificationNumberExcept))
+                                .filter(employee -> employee.getIdentificationNumber().equals(identificationNumber))
+                                .findFirst().isPresent();
+        }
+
+        private String generacionCorreo(String nombres, String primerApellido, String dominio) {
                 var primerNombre = nombres.split(" ")[0];
                 var empleados = this.employeRepository.findAll().stream()
-                                .filter(empleado -> empleado.getPrimerApellido()
+                                .filter(empleado -> empleado.getFirstSurname()
                                                 .equals(primerApellido)
-                                                && empleado.getNombres().split(" ")[0].equals(primerNombre))
+                                                && empleado.getNames().split(" ")[0].equals(primerNombre))
                                 .toList();
 
                 var identifier = empleados;
                 var correo = primerNombre + "." + primerApellido + "."
-                                + (identifier.size() == 0 ? "" : identifier.get(identifier.size() - 1).getIdEmploye())
+                                + (identifier.size() == 0 ? "" : identifier.get(identifier.size() - 1).getIdEmployee())
                                 + "@" + dominio;
                 return correo;
+        }
+
+        private <T extends Enum<T>> T parseEnum(Class<T> enumType, String value, String errorMessage) {
+                try {
+                        return Enum.valueOf(enumType, value.toUpperCase());
+                } catch (IllegalArgumentException | NullPointerException e) {
+                        throw new IllegalArgumentException(errorMessage);
+                }
         }
 
         private java.util.logging.Logger logger = java.util.logging.Logger.getLogger(getClass().getName());

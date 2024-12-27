@@ -6,7 +6,8 @@ import lombok.Setter;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
+import com.ex.backend.model.Identification;
+import com.ex.backend.model.Country;
 
 import lombok.AllArgsConstructor;
 
@@ -16,9 +17,11 @@ import lombok.AllArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EmployeUpdate implements Serializable {
+public class EmployeDisplay {
 
         private String identificationNumber;
+
+        private String email;
 
         private String names;
 
@@ -26,12 +29,13 @@ public class EmployeUpdate implements Serializable {
 
         private String secondSurname;
 
-        private String country;
+        private Country country;
 
-        private String identification;
+        private Identification identification;
 
         private String domain;
 
         private String department;
-
+        
+        private String status;
 }

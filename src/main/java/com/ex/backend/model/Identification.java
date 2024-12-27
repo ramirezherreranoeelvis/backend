@@ -8,7 +8,7 @@ package com.ex.backend.model;
  *
  * @author Gatomontes
  */
-public enum Identificacion {
+public enum Identification {
 
         CEDULA_DE_CIUDADANIA("cedula de ciudadania"),
         CEDULA_EXTRANJERA("cedula extranjera"),
@@ -17,7 +17,7 @@ public enum Identificacion {
 
         private final String displayName;
 
-        Identificacion(String displayName) {
+        Identification(String displayName) {
                 this.displayName = displayName;
         }
 
