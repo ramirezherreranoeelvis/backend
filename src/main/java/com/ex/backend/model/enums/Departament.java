@@ -1,4 +1,4 @@
-package com.ex.backend.model;
+package com.ex.backend.model.enums;
 
 /**
  *

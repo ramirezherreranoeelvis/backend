@@ -1,21 +1,21 @@
-package com.ex.backend.employe.dao;
+package com.ex.backend.dao;
 
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
 
-import com.ex.backend.employe.dto.EmployeCreate;
-import com.ex.backend.employe.dto.EmployeDisplay;
+import com.ex.backend.dto.EmployeCreateDTO;
+import com.ex.backend.dto.EmployeDisplayDTO;
 import com.ex.backend.model.Employee;
 
 public interface IEmployeeDAO {
 
-        ResponseEntity<?> create(EmployeCreate employeCreate);
+        ResponseEntity<?> create(EmployeCreateDTO employeCreate);
 
-        List<EmployeDisplay> findEmployess();
+        List<EmployeDisplayDTO> findEmployess();
 
-        ResponseEntity<?> update(EmployeCreate employeUpdate, String numeroIdentificacion);
+        ResponseEntity<?> update(EmployeCreateDTO employeUpdate, String numeroIdentificacion);
 
         ResponseEntity<?> salida(String numeroIdentificacion);
 

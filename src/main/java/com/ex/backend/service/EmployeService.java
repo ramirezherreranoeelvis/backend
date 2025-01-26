@@ -1,4 +1,4 @@
-package com.ex.backend.employe.service;
+package com.ex.backend.service;
 
 import java.util.Date;
 import java.util.List;
@@ -8,18 +8,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.ex.backend.employe.dao.IEmployeeDAO;
-import com.ex.backend.employe.dto.EmployeCreate;
-import com.ex.backend.employe.dto.EmployeDisplay;
-import com.ex.backend.employe.repository.IEmployeRepository;
-import com.ex.backend.employe.repository.IEntryRepository;
+import com.ex.backend.dao.IEmployeeDAO;
+import com.ex.backend.dto.EmployeCreateDTO;
+import com.ex.backend.dto.EmployeDisplayDTO;
 import com.ex.backend.message.Message;
-import com.ex.backend.model.Departament;
-import com.ex.backend.model.Domain;
 import com.ex.backend.model.Employee;
-import com.ex.backend.model.Identification;
+import com.ex.backend.model.enums.Country;
+import com.ex.backend.model.enums.Departament;
+import com.ex.backend.model.enums.Domain;
+import com.ex.backend.model.enums.Identification;
+import com.ex.backend.repository.IEmployeRepository;
+import com.ex.backend.repository.IEntryRepository;
 import com.ex.backend.model.Activity;
-import com.ex.backend.model.Country;
 
 import jakarta.transaction.Transactional;
 
@@ -33,7 +33,7 @@ public class EmployeService implements IEmployeeDAO {
         private IEntryRepository entryRepository;
 
         @Override
-        public ResponseEntity<?> create(EmployeCreate employeCreate) {
+        public ResponseEntity<?> create(EmployeCreateDTO employeCreate) {
                 try {
                         var country = parseEnum(Country.class, employeCreate.getCountry(), "País no válido");
                         var domain = parseEnum(Domain.class, employeCreate.getDomain(), "Dominio no válido");
@@ -67,7 +67,7 @@ public class EmployeService implements IEmployeeDAO {
         }
 
         @Override
-        public ResponseEntity<?> update(EmployeCreate employeUpdate, String numeroIdentificacion) {
+        public ResponseEntity<?> update(EmployeCreateDTO employeUpdate, String numeroIdentificacion) {
                 try {
                         var employe = this.findByIdentification(numeroIdentificacion).get();
                         // valid Enums
@@ -134,8 +134,8 @@ public class EmployeService implements IEmployeeDAO {
         }
 
         @Override
-        public List<EmployeDisplay> findEmployess() {
-                return this.employeRepository.findAll().stream().map(employee -> EmployeDisplay
+        public List<EmployeDisplayDTO> findEmployess() {
+                return this.employeRepository.findAll().stream().map(employee -> EmployeDisplayDTO
                                 .builder()
                                 .email(employee.getEmail())
                                 .domain(employee.getDomain().getDisplayName())

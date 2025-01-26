@@ -1,4 +1,4 @@
-package com.ex.backend.employe.dto;
+package com.ex.backend.dto;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -16,7 +16,7 @@ import lombok.AllArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EmployeCreate implements Serializable{
+public class EmployeUpdateDTO implements Serializable {
 
         private String identificationNumber;
 

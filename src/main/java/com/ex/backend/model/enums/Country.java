@@ -1,17 +1,17 @@
-package com.ex.backend.model;
+package com.ex.backend.model.enums;
 
 /**
  *
  * @author Gatomontes
  */
-public enum Domain {
+public enum Country {
 
-        USA("global.com.us"),
-        COLOMBIA("global.com.co");
+        USA("USA"),
+        COLOMBIA("COLOMBIA");
 
         private final String displayName;
 
-        Domain(String displayName) {
+        Country(String displayName) {
                 this.displayName = displayName;
         }
 

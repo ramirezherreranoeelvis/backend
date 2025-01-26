@@ -2,6 +2,11 @@ package com.ex.backend.model;
 
 import java.util.Date;
 
+import com.ex.backend.model.enums.Country;
+import com.ex.backend.model.enums.Departament;
+import com.ex.backend.model.enums.Domain;
+import com.ex.backend.model.enums.Identification;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -13,19 +18,17 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
+@AllArgsConstructor
+@NoArgsConstructor
 @Setter
 @Getter
-@EqualsAndHashCode
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(name = "employee")
 public class Employee {

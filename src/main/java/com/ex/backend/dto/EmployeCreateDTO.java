@@ -1,4 +1,4 @@
-package com.ex.backend.employe.dto;
+package com.ex.backend.dto;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -6,8 +6,7 @@ import lombok.Setter;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 
-import com.ex.backend.model.Identification;
-import com.ex.backend.model.Country;
+import java.io.Serializable;
 
 import lombok.AllArgsConstructor;
 
@@ -17,11 +16,9 @@ import lombok.AllArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EmployeDisplay {
+public class EmployeCreateDTO implements Serializable{
 
         private String identificationNumber;
-
-        private String email;
 
         private String names;
 
@@ -29,13 +26,12 @@ public class EmployeDisplay {
 
         private String secondSurname;
 
-        private Country country;
+        private String country;
 
-        private Identification identification;
+        private String identification;
 
         private String domain;
 
         private String department;
-        
-        private String status;
+
 }

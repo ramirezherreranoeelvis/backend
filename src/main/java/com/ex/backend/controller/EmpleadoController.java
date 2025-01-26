@@ -1,4 +1,4 @@
-package com.ex.backend.employe.controller;
+package com.ex.backend.controller;
 
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ex.backend.employe.dao.IEmployeeDAO;
-import com.ex.backend.employe.dto.EmployeCreate;
+import com.ex.backend.dao.IEmployeeDAO;
+import com.ex.backend.dto.EmployeCreateDTO;
 import com.ex.backend.util.ValidDataUtil;
 
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,7 +35,7 @@ public class EmpleadoController {
         }
 
         @PostMapping("/create")
-        public ResponseEntity<?> createEmployee(@RequestBody EmployeCreate employeCreate) {
+        public ResponseEntity<?> createEmployee(@RequestBody EmployeCreateDTO employeCreate) {
                 if (isMissingData.test(employeCreate)) {
                         return ResponseEntity.badRequest().body("Faltan datos");
                 }
@@ -54,7 +54,7 @@ public class EmpleadoController {
         }
 
         @PutMapping("/update")
-        public ResponseEntity<?> updateDataEmployed(@RequestBody EmployeCreate employeUpdate,
+        public ResponseEntity<?> updateDataEmployed(@RequestBody EmployeCreateDTO employeUpdate,
                         @RequestParam String identificationNumber) {
                 // Validar si faltan datos
                 if (isMissingData.test(employeUpdate)) {
@@ -113,7 +113,7 @@ public class EmpleadoController {
                 return this.employeeDAO.delete(identificationNumber);
         }
 
-        Predicate<EmployeCreate> isMissingData = employeCreate -> Stream.of(
+        Predicate<EmployeCreateDTO> isMissingData = employeCreate -> Stream.of(
                         employeCreate.getIdentification(),
                         employeCreate.getNames(),
                         employeCreate.getIdentificationNumber(),
@@ -122,7 +122,7 @@ public class EmpleadoController {
                         employeCreate.getSecondSurname())
                         .anyMatch(Objects::isNull);
 
-        Predicate<EmployeCreate> isNamesValid = employeCreate -> Stream.of(
+        Predicate<EmployeCreateDTO> isNamesValid = employeCreate -> Stream.of(
                         employeCreate.getNames(),
                         employeCreate.getFirstSurname(),
                         employeCreate.getSecondSurname())
