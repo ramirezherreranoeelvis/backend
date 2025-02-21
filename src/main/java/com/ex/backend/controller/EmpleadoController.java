@@ -36,7 +36,7 @@ public class EmpleadoController {
 
         @PostMapping("/create")
         public ResponseEntity<?> createEmployee(@RequestBody EmployeCreateDTO employeCreate) {
-                if (isMissingData.test(employeCreate)) {
+                if (this.isMissingData.test(employeCreate)) {
                         return ResponseEntity.badRequest().body("Faltan datos");
                 }
                 if (!ValidDataUtil.identificationNumberValid(employeCreate.getIdentificationNumber())) {
@@ -46,7 +46,7 @@ public class EmpleadoController {
                         return ResponseEntity.badRequest().body("El número de identificación ya está en uso");
                 }
 
-                if (!isNamesValid.test(employeCreate)) {
+                if (!this.isNamesValid.test(employeCreate)) {
                         return ResponseEntity.badRequest().body("No se permite caracteres especiales como ñ o tildes");
                 }
 
@@ -57,24 +57,24 @@ public class EmpleadoController {
         public ResponseEntity<?> updateDataEmployed(@RequestBody EmployeCreateDTO employeUpdate,
                         @RequestParam String identificationNumber) {
                 // Validar si faltan datos
-                if (isMissingData.test(employeUpdate)) {
+                if (this.isMissingData.test(employeUpdate)) {
                         return ResponseEntity.badRequest().body("Faltan datos");
                 }
                 if (!ValidDataUtil.identificationNumberValid(employeUpdate.getIdentificationNumber())) {
                         return ResponseEntity.badRequest().body("Número de Identificación No Valido");
                 }
                 // Validar caracteres inválidos en nombres
-                if (!isNamesValid.test(employeUpdate)) {
+                if (!this.isNamesValid.test(employeUpdate)) {
                         return ResponseEntity.badRequest().body("No se permiten caracteres especiales como ñ o tildes");
                 }
 
                 // Verificar si el empleado a actualizar existe
-                if (!employeeDAO.verifyEmployeeExistence(identificationNumber)) {
+                if (!this.employeeDAO.verifyEmployeeExistence(identificationNumber)) {
                         return ResponseEntity.badRequest().body("El empleado a actualizar no existe");
                 }
 
                 // Verificar si el número de identificación ya está en uso
-                if (employeeDAO.verifyEmployeeExistence(employeUpdate.getIdentificationNumber(), identificationNumber)) {
+                if (this.employeeDAO.verifyEmployeeExistence(employeUpdate.getIdentificationNumber(), identificationNumber)) {
                         return ResponseEntity.badRequest().body("El número de identificación ya está en uso");
                 }
 
@@ -90,7 +90,7 @@ public class EmpleadoController {
                 if (this.employeeDAO.findByIdentification(identificationNumber).isEmpty()) {
                         return ResponseEntity.badRequest().body("El empleado a registrar ingreso no existe");
                 }
-                var value = employeeDAO.entrada(identificationNumber);
+                var value = this.employeeDAO.entrada(identificationNumber);
 
                 return value;
         }
@@ -103,7 +103,7 @@ public class EmpleadoController {
                 if (this.employeeDAO.findByIdentification(identificationNumber).isEmpty()) {
                         return ResponseEntity.badRequest().body("El empleado a registrar ingreso no existe");
                 }
-                var value = employeeDAO.salida(identificationNumber);
+                var value = this.employeeDAO.salida(identificationNumber);
 
                 return value;
         }

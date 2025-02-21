@@ -34,10 +34,10 @@ public class JWTUtil {
 
                 long nowMillis = System.currentTimeMillis();
                 Date now = new Date(nowMillis);
-                
+
                 // sign JWT with our ApiKey secret
                 byte[] apiKeySecretBytes = Base64.getDecoder().decode(key);
-                
+
                 Key signingKey = new SecretKeySpec(apiKeySecretBytes, signatureAlgorithm.getJcaName());
 
                 // set the JWT Claims
@@ -47,43 +47,42 @@ public class JWTUtil {
                                 .setSubject(subject)
                                 .setIssuer(issuer)
                                 .signWith(signatureAlgorithm, signingKey);
-                                logger.info("A");
+
                 if (ttlMillis >= 0) {
                         long expMillis = nowMillis + ttlMillis;
                         Date exp = new Date(expMillis);
                         builder.setExpiration(exp);
                 }
-                logger.info("B");
+
                 // Builds the JWT and serializes it to a compact, URL-safe string
                 return builder.compact();
         }
 
-        /**
-         * Method to validate and read the JWT
-         */
-        public String getValue(String jwt) {
-                // This line will throw an exception if it is not a signed JWS (as
-                // expected)
-                Claims claims = Jwts.parser()
+        public Claims getValue(String jwt) {
+                try {
+                        Claims claims = parseToken(jwt);
+                        return claims;
+                } catch (Exception e) {
+                        logger.info("Error al validar el token: {}" + e.getMessage());
+                        throw new RuntimeException("Token inválido", e);
+                }
+        }
+
+        public String getKey(String jwt) {
+                try {
+                        Claims claims = parseToken(jwt);
+                        return claims.getId();
+                } catch (Exception e) {
+                        logger.info("Error al validar el token: {}" + e.getMessage());
+                        throw new RuntimeException("Token inválido", e);
+                }
+        }
+
+        private Claims parseToken(String jwt) {
+                return Jwts.parser()
                                 .setSigningKey(Base64.getDecoder().decode(key))
                                 .parseClaimsJws(jwt)
                                 .getBody();
-
-                return claims.getSubject();
-        }
-
-        /**
-         * Method to validate and read the JWT
-         * 
-         */
-        public String getKey(String jwt) {
-                // This line will throw an exception if it is not a signed JWS (as
-                // expected)
-                Claims claims = Jwts.parser()
-                                .setSigningKey(Base64.getDecoder().decode(key))
-                                .parseClaimsJws(jwt).getBody();
-
-                return claims.getId();
         }
 
 }

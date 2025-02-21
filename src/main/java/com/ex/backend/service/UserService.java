@@ -9,6 +9,7 @@ import com.ex.backend.dao.IUserDAO;
 import com.ex.backend.message.Message;
 import com.ex.backend.model.User;
 import com.ex.backend.repository.IUserRespository;
+import com.ex.backend.util.DataJWT;
 import com.ex.backend.util.JWTUtil;
 
 import jakarta.transaction.Transactional;
@@ -72,6 +73,22 @@ public class UserService implements IUserDAO {
                 this.userRepository = userRespository;
                 this.passwordEncoder = new BCryptPasswordEncoder();
                 this.jwtUtil = jwtUtil;
+        }
+
+        @Override
+        public ResponseEntity<?> decrypt(String name) {
+                try {
+                        var jwt = this.jwtUtil.getValue(name);
+                        var dataJWT = DataJWT.builder().id(Integer.parseInt(jwt.getId()))
+                                        .now(jwt.getIssuedAt())
+                                        .email(jwt.getSubject())
+                                        .issuer(jwt.getIssuer())
+                                        .expiration(jwt.getExpiration())
+                                        .build();
+                        return ResponseEntity.ok().body(Message.message("", dataJWT));
+                } catch (Exception e) {
+                        return ResponseEntity.internalServerError().body("Error decrypting user: " + e.getMessage());
+                }
         }
 
 }

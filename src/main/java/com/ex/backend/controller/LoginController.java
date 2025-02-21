@@ -8,8 +8,10 @@ import com.ex.backend.dto.UserCredentialsDTO;
 
 import jakarta.validation.Valid;
 
+
 @RestController
 @CrossOrigin(origins = "http://localhost:4200", allowedHeaders = "*")
+@RequestMapping("/login")
 public class LoginController {
 
         @PostMapping("/register")
@@ -26,6 +28,12 @@ public class LoginController {
                 var email = credentials.getEmail();
                 return this.userDAO.auth(email, password);
         }
+
+        @GetMapping("/data")
+        public ResponseEntity<?> decrypt(@RequestParam String jwt) {
+            return this.userDAO.decrypt(jwt);
+        }
+        
 
         private IUserDAO userDAO;
 

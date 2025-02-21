@@ -8,4 +8,6 @@ public interface IUserDAO {
 
         ResponseEntity<?> auth(String email, String password);
 
+        ResponseEntity<?> decrypt(String name);
+
 }
